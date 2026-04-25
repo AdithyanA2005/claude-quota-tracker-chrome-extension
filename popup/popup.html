@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Usage Tracker</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Claude Usage Tracker</h1>
+      <button id="refreshBtn" class="refresh-btn" title="Refresh data">
+        <span class="refresh-icon">🔄</span>
+      </button>
+    </div>
+
+    <div id="loadingContainer" class="loading-container">
+      <div class="spinner"></div>
+      <p>Loading usage data...</p>
+    </div>
+
+    <div id="contentContainer" class="content-container" style="display: none;">
+      <!-- Subscription Tier -->
+      <div class="tier-section">
+        <div class="tier-badge" id="tierBadge">Loading...</div>
+      </div>
+
+      <!-- 5-Hour Session Limit -->
+      <div class="quota-section" id="fiveHourSection" style="display: none;">
+        <div class="quota-header">
+          <span class="quota-label">⏱️ 5-Hour Session Limit</span>
+          <span class="quota-percentage" id="fiveHourPercent">--%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="fiveHourBar"></div>
+        </div>
+        <div class="quota-footer">
+          <span class="reset-label">Reset:</span>
+          <span class="reset-time" id="fiveHourReset">-</span>
+        </div>
+      </div>
+
+      <!-- 7-Day Limit -->
+      <div class="quota-section" id="sevenDaySection" style="display: none;">
+        <div class="quota-header">
+          <span class="quota-label">📅 7-Day Limit</span>
+          <span class="quota-percentage" id="sevenDayPercent">--%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="sevenDayBar"></div>
+        </div>
+        <div class="quota-footer">
+          <span class="reset-label">Reset:</span>
+          <span class="reset-time" id="sevenDayReset">-</span>
+        </div>
+      </div>
+
+      <!-- Claude 3.5 Sonnet Weekly (if available) -->
+      <div class="quota-section" id="sonnetWeeklySection" style="display: none;">
+        <div class="quota-header">
+          <span class="quota-label">🎵 Sonnet Weekly Limit</span>
+          <span class="quota-percentage" id="sonnetPercent">--%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="sonnetBar"></div>
+        </div>
+        <div class="quota-footer">
+          <span class="reset-label">Reset:</span>
+          <span class="reset-time" id="sonnetReset">-</span>
+        </div>
+      </div>
+
+      <!-- Claude 3 Opus Weekly (if available) -->
+      <div class="quota-section" id="opusWeeklySection" style="display: none;">
+        <div class="quota-header">
+          <span class="quota-label">🎼 Opus Weekly Limit</span>
+          <span class="quota-percentage" id="opusPercent">--%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="opusBar"></div>
+        </div>
+        <div class="quota-footer">
+          <span class="reset-label">Reset:</span>
+          <span class="reset-time" id="opusReset">-</span>
+        </div>
+      </div>
+
+      <!-- Last Updated -->
+      <div class="footer">
+        <span id="lastUpdated">Last updated: -</span>
+      </div>
+    </div>
+
+    <!-- Error Container -->
+    <div id="errorContainer" class="error-container" style="display: none;">
+      <div class="error-icon">⚠️</div>
+      <h2>Unable to Load Usage Data</h2>
+      <p id="errorMessage">-</p>
+      <p class="error-hint">Make sure you're logged into <a href="https://claude.ai" target="_blank">claude.ai</a></p>
+      <button id="retryBtn" class="retry-btn">Try Again</button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
