@@ -1,0 +1,14 @@
+{
+  "name": "claude-usage-tracker-extension",
+  "version": "1.0.0",
+  "description": "Track your Claude.ai usage quota and reset times in real-time",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "2.0.0-beta.33",
+    "vite": "^5.0.0"
+  }
+}
