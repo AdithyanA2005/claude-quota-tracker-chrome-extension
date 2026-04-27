@@ -1,12 +1,12 @@
 // Claude Usage Tracker - Content Script
 // Mounts inline quota bars near Claude's composer and keeps them mounted.
 
-const TRACKER_ROOT_ID = 'clu-usage-inline-root';
-const TRACKER_STYLE_ID = 'clu-usage-inline-style';
+const TRACKER_ROOT_ID = "clu-usage-inline-root";
+const TRACKER_STYLE_ID = "clu-usage-inline-style";
 const REFRESH_INTERVAL_MS = 60 * 1000;
 const MOUNT_THROTTLE_MS = 250;
 
-const LOG_PREFIX = '[CLUT]';
+const LOG_PREFIX = "[CLUT]";
 
 let refreshTimer = null;
 let mutationObserver = null;
@@ -17,7 +17,7 @@ let orgIdExtractionAttempts = 0;
 const MAX_ORG_ID_EXTRACTION_ATTEMPTS = 10;
 
 function log(message, extra) {
-  if (typeof extra === 'undefined') {
+  if (typeof extra === "undefined") {
     console.log(`${LOG_PREFIX} ${message}`);
   } else {
     console.log(`${LOG_PREFIX} ${message}`, extra);
@@ -39,27 +39,30 @@ function normalizeOrgId(value) {
 
   try {
     const parsed = JSON.parse(normalized);
-    if (typeof parsed === 'string') {
+    if (typeof parsed === "string") {
       normalized = parsed;
-    } else if (parsed && typeof parsed === 'object') {
-      normalized = parsed.uuid || parsed.id || parsed.organization_uuid || normalized;
+    } else if (parsed && typeof parsed === "object") {
+      normalized =
+        parsed.uuid || parsed.id || parsed.organization_uuid || normalized;
     }
   } catch (_error) {
-    normalized = normalized.replace(/^['"]|['"]$/g, '');
+    normalized = normalized.replace(/^['"]|['"]$/g, "");
   }
 
-  const uuidMatch = normalized.match(/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i);
+  const uuidMatch = normalized.match(
+    /[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i,
+  );
   return uuidMatch ? uuidMatch[0] : normalized;
 }
 
 function getOrgIdFromLocalStorage() {
   try {
-    const lastActiveOrg = localStorage.getItem('lastActiveOrg');
+    const lastActiveOrg = localStorage.getItem("lastActiveOrg");
     if (lastActiveOrg) {
       return normalizeOrgId(lastActiveOrg);
     }
   } catch (error) {
-    log('localStorage read failed', error);
+    log("localStorage read failed", error);
   }
 
   return null;
@@ -72,7 +75,7 @@ function getOrgIdFromWindowState() {
       return normalizeOrgId(state.orgId);
     }
   } catch (error) {
-    log('window state read failed', error);
+    log("window state read failed", error);
   }
 
   return null;
@@ -83,9 +86,9 @@ function sendOrgIdToBackground(orgId) {
     return;
   }
 
-  chrome.runtime.sendMessage({ action: 'setOrgId', orgId }, () => {
+  chrome.runtime.sendMessage({ action: "setOrgId", orgId }, () => {
     if (chrome.runtime.lastError) {
-      log('setOrgId failed', chrome.runtime.lastError.message);
+      log("setOrgId failed", chrome.runtime.lastError.message);
     }
   });
 }
@@ -110,7 +113,11 @@ function isVisibleElement(el) {
   }
 
   const style = window.getComputedStyle(el);
-  if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) {
+  if (
+    style.display === "none" ||
+    style.visibility === "hidden" ||
+    Number(style.opacity) === 0
+  ) {
     return false;
   }
 
@@ -120,10 +127,10 @@ function isVisibleElement(el) {
 
 function getComposerInputs() {
   const selectors = [
-    'textarea',
+    "textarea",
     '[contenteditable="true"][role="textbox"]',
     '[contenteditable="true"][aria-label*="prompt" i]',
-    '[contenteditable="true"]'
+    '[contenteditable="true"]',
   ];
 
   const candidates = [];
@@ -143,12 +150,14 @@ function chooseBestComposerHost() {
   const inputs = getComposerInputs();
 
   for (const input of inputs) {
-    const form = input.closest('form');
+    const form = input.closest("form");
     if (form && isVisibleElement(form)) {
       return form;
     }
 
-    const panel = input.closest('[class*="composer" i], [class*="prompt" i], [class*="input" i]');
+    const panel = input.closest(
+      '[class*="composer" i], [class*="prompt" i], [class*="input" i]',
+    );
     if (panel && isVisibleElement(panel)) {
       return panel;
     }
@@ -167,17 +176,17 @@ function injectInlineStyles() {
     return;
   }
 
-  const style = document.createElement('style');
+  const style = document.createElement("style");
   style.id = TRACKER_STYLE_ID;
   style.textContent = `
     #${TRACKER_ROOT_ID} {
       width: 100%;
       margin-top: 8px;
-      border-radius: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: linear-gradient(135deg, rgba(12, 19, 34, 0.86), rgba(18, 29, 48, 0.68));
-      padding: 7px 10px 8px;
-      backdrop-filter: blur(6px);
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 16px;
+      padding: 0 4px;
       box-sizing: border-box;
       animation: cluFadeIn 220ms ease;
       position: relative;
@@ -187,33 +196,27 @@ function injectInlineStyles() {
     #${TRACKER_ROOT_ID} .clu-row {
       display: grid;
       grid-template-columns: auto 1fr auto;
-      gap: 8px;
+      gap: 10px;
       align-items: center;
-      margin-bottom: 6px;
-      color: #dbe7ff;
-      font-size: 12px;
+      flex: 1;
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 11px;
       line-height: 1;
     }
 
-    #${TRACKER_ROOT_ID} .clu-row:last-of-type {
-      margin-bottom: 3px;
-    }
-
     #${TRACKER_ROOT_ID} .clu-label {
-      font-weight: 700;
-      min-width: 30px;
-      color: #9bb7ff;
-      text-transform: uppercase;
-      letter-spacing: 0.35px;
+      font-weight: 500;
+      min-width: 20px;
+      color: rgba(255, 255, 255, 0.5);
       font-size: 10px;
+      letter-spacing: 0.5px;
     }
 
     #${TRACKER_ROOT_ID} .clu-track {
       width: 100%;
-      height: 7px;
+      height: 4px;
       border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      background: rgba(4, 8, 16, 0.9);
+      background: rgba(255, 255, 255, 0.08);
       overflow: hidden;
       position: relative;
     }
@@ -223,41 +226,31 @@ function injectInlineStyles() {
       height: 100%;
       border-radius: 999px;
       transition: width 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
-      background: linear-gradient(90deg, #7ea7ff, #5a7cff);
-      box-shadow: 0 0 12px rgba(90, 124, 255, 0.45);
+      background: rgba(255, 255, 255, 0.85);
     }
 
     #${TRACKER_ROOT_ID} .clu-fill.warning {
-      background: linear-gradient(90deg, #f6c47f, #e29f4b);
-      box-shadow: 0 0 12px rgba(246, 196, 127, 0.42);
+      background: #f6c47f;
     }
 
     #${TRACKER_ROOT_ID} .clu-fill.critical {
-      background: linear-gradient(90deg, #ff9ea6, #ef5f7e);
-      box-shadow: 0 0 12px rgba(239, 95, 126, 0.45);
+      background: #ff9ea6;
     }
 
     #${TRACKER_ROOT_ID} .clu-meta {
       display: inline-flex;
-      gap: 7px;
+      gap: 6px;
       align-items: center;
-      color: #adbcdf;
-      font-size: 11px;
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 10px;
       white-space: nowrap;
     }
 
     #${TRACKER_ROOT_ID} .clu-dot {
-      width: 4px;
-      height: 4px;
+      width: 3px;
+      height: 3px;
       border-radius: 50%;
-      background: rgba(173, 188, 223, 0.8);
-    }
-
-    #${TRACKER_ROOT_ID} .clu-status {
-      font-size: 10px;
-      color: #7f93c2;
-      min-height: 12px;
-      margin-top: 1px;
+      background: rgba(255, 255, 255, 0.2);
     }
 
     @keyframes cluFadeIn {
@@ -270,26 +263,26 @@ function injectInlineStyles() {
 }
 
 function buildRow(prefix, labelText) {
-  const row = document.createElement('div');
-  row.className = 'clu-row';
+  const row = document.createElement("div");
+  row.className = "clu-row";
 
-  const label = document.createElement('span');
-  label.className = 'clu-label';
+  const label = document.createElement("span");
+  label.className = "clu-label";
   label.textContent = labelText;
 
-  const track = document.createElement('div');
-  track.className = 'clu-track';
+  const track = document.createElement("div");
+  track.className = "clu-track";
 
-  const fill = document.createElement('div');
-  fill.className = 'clu-fill';
+  const fill = document.createElement("div");
+  fill.className = "clu-fill";
   fill.id = `${prefix}-fill`;
 
   track.appendChild(fill);
 
-  const meta = document.createElement('span');
-  meta.className = 'clu-meta';
+  const meta = document.createElement("span");
+  meta.className = "clu-meta";
   meta.id = `${prefix}-meta`;
-  meta.textContent = '--%';
+  meta.textContent = "--%";
 
   row.append(label, track, meta);
   return row;
@@ -303,12 +296,6 @@ function createTrackerRoot() {
   root.appendChild(buildRow('clu-five-hour', '5H'));
   root.appendChild(buildRow('clu-seven-day', '7D'));
 
-  const status = document.createElement('div');
-  status.className = 'clu-status';
-  status.id = 'clu-inline-status';
-  status.textContent = 'Finding composer...';
-  root.appendChild(status);
-
   return root;
 }
 
@@ -317,7 +304,7 @@ function getTrackerRoot() {
 }
 
 function setInlineStatus(text) {
-  const status = document.getElementById('clu-inline-status');
+  const status = document.getElementById("clu-inline-status");
   if (status) {
     status.textContent = text;
   }
@@ -328,7 +315,7 @@ function ensureTrackerMounted() {
 
   const host = chooseBestComposerHost();
   if (!host) {
-    log('host-missing');
+    log("host-missing");
     return null;
   }
 
@@ -339,7 +326,7 @@ function ensureTrackerMounted() {
 
   if (!host.contains(root)) {
     host.appendChild(root);
-    log('host-found', host);
+    log("host-found", host);
   }
 
   return root;
@@ -347,27 +334,27 @@ function ensureTrackerMounted() {
 
 function getSeverityClass(percentage) {
   if (percentage >= 90) {
-    return 'critical';
+    return "critical";
   }
   if (percentage >= 70) {
-    return 'warning';
+    return "warning";
   }
-  return '';
+  return "";
 }
 
 function formatCountdown(isoDate) {
   if (!isoDate) {
-    return 'reset: --';
+    return '--';
   }
 
   const resetTime = new Date(isoDate).getTime();
   if (Number.isNaN(resetTime)) {
-    return 'reset: --';
+    return '--';
   }
 
   const remainingMs = resetTime - Date.now();
   if (remainingMs <= 0) {
-    return 'reset: now';
+    return 'now';
   }
 
   const totalMinutes = Math.floor(remainingMs / 60000);
@@ -376,12 +363,12 @@ function formatCountdown(isoDate) {
   const minutes = totalMinutes % 60;
 
   if (days > 0) {
-    return `reset in ${days}d ${hours}h`;
+    return `⏳ ${days}d ${hours}h`;
   }
   if (hours > 0) {
-    return `reset in ${hours}h ${minutes}m`;
+    return `⏳ ${hours}h ${minutes}m`;
   }
-  return `reset in ${minutes}m`;
+  return `⏳ ${minutes}m`;
 }
 
 function setRowState(prefix, quotaObj) {
@@ -392,39 +379,42 @@ function setRowState(prefix, quotaObj) {
   }
 
   if (!quotaObj) {
-    fill.style.width = '0%';
-    fill.className = 'clu-fill';
-    meta.textContent = '--%';
+    fill.style.width = "0%";
+    fill.className = "clu-fill";
+    meta.textContent = "--%";
     return;
   }
 
-  const percentage = Math.max(0, Math.min(100, Number(quotaObj.utilization) || 0));
+  const percentage = Math.max(
+    0,
+    Math.min(100, Number(quotaObj.utilization) || 0),
+  );
   fill.style.width = `${percentage}%`;
   fill.className = `clu-fill ${getSeverityClass(percentage)}`.trim();
 
   const pctText = `${Math.round(percentage)}%`;
   const countdown = formatCountdown(quotaObj.resetsAtISO);
 
-  meta.textContent = '';
-  const pctNode = document.createElement('span');
+  meta.textContent = "";
+  const pctNode = document.createElement("span");
   pctNode.textContent = pctText;
-  const dot = document.createElement('span');
-  dot.className = 'clu-dot';
-  const resetNode = document.createElement('span');
+  const dot = document.createElement("span");
+  dot.className = "clu-dot";
+  const resetNode = document.createElement("span");
   resetNode.textContent = countdown;
   meta.append(pctNode, dot, resetNode);
 }
 
 function requestUsageData() {
   return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage({ action: 'getUsageData' }, (response) => {
+    chrome.runtime.sendMessage({ action: "getUsageData" }, (response) => {
       if (chrome.runtime.lastError) {
         reject(new Error(chrome.runtime.lastError.message));
         return;
       }
 
       if (!response || !response.success) {
-        reject(new Error(response?.error || 'Unable to fetch usage data'));
+        reject(new Error(response?.error || "Unable to fetch usage data"));
         return;
       }
 
@@ -439,24 +429,27 @@ async function updateInlineTracker() {
     return;
   }
 
-  setInlineStatus('Composer found, syncing quota...');
+  setInlineStatus("Composer found, syncing quota...");
 
   try {
     const data = await requestUsageData();
-    setRowState('clu-five-hour', data.fiveHour);
-    setRowState('clu-seven-day', data.sevenDay);
+    setRowState("clu-five-hour", data.fiveHour);
+    setRowState("clu-seven-day", data.sevenDay);
 
     if (data.stale) {
-      setInlineStatus('Using cached quota data');
+      setInlineStatus("Using cached quota data");
     } else {
-      const timeText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const timeText = new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
       setInlineStatus(`Quota synced ${timeText}`);
     }
 
-    log('data-ok');
+    log("data-ok");
   } catch (error) {
-    setInlineStatus('No quota data yet');
-    log('data-error', error.message);
+    setInlineStatus("No quota data yet");
+    log("data-error", error.message);
   }
 }
 
@@ -491,14 +484,14 @@ function startMutationObserver() {
 
   mutationObserver.observe(document.body, {
     childList: true,
-    subtree: true
+    subtree: true,
   });
 }
 
 function handleRouteOrViewChange() {
   if (window.location.href !== locationHref) {
     locationHref = window.location.href;
-    log('route-change', locationHref);
+    log("route-change", locationHref);
     scheduleMountAndUpdate();
   }
 }
@@ -509,19 +502,19 @@ function patchHistoryForSpaNavigation() {
 
   history.pushState = function pushStatePatched(...args) {
     const result = originalPushState.apply(this, args);
-    window.dispatchEvent(new Event('clu:locationchange'));
+    window.dispatchEvent(new Event("clu:locationchange"));
     return result;
   };
 
   history.replaceState = function replaceStatePatched(...args) {
     const result = originalReplaceState.apply(this, args);
-    window.dispatchEvent(new Event('clu:locationchange'));
+    window.dispatchEvent(new Event("clu:locationchange"));
     return result;
   };
 }
 
 chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
-  if (request.action === 'getOrgId') {
+  if (request.action === "getOrgId") {
     const orgId = getOrgIdFromLocalStorage() || getOrgIdFromWindowState();
     if (orgId) {
       sendOrgIdToBackground(orgId);
@@ -530,7 +523,7 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     return false;
   }
 
-  if (request.action === 'refreshInlineTracker') {
+  if (request.action === "refreshInlineTracker") {
     updateInlineTracker().then(() => sendResponse({ success: true }));
     return true;
   }
@@ -539,24 +532,27 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
 });
 
 function init() {
-  log('content-script-loaded');
+  log("content-script-loaded");
   extractAndSendOrgId();
   patchHistoryForSpaNavigation();
   startRefreshLoop();
   startMutationObserver();
 
-  window.addEventListener('clu:locationchange', handleRouteOrViewChange);
-  window.addEventListener('popstate', handleRouteOrViewChange);
+  window.addEventListener("clu:locationchange", handleRouteOrViewChange);
+  window.addEventListener("popstate", handleRouteOrViewChange);
 
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
       scheduleMountAndUpdate();
     }
   });
 }
 
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
+if (
+  document.readyState === "complete" ||
+  document.readyState === "interactive"
+) {
   init();
 } else {
-  window.addEventListener('load', init, { once: true });
+  window.addEventListener("load", init, { once: true });
 }
