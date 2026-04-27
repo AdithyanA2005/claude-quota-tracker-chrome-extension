@@ -187,8 +187,8 @@ function injectInlineStyles() {
       flex-direction: row;
       align-items: center;
       justify-content: center;
-      gap: 16px;
-      padding: 0 12px;
+      gap: 12px;
+      padding: 0;
       box-sizing: border-box;
       animation: cluFadeIn 220ms ease;
       position: relative;
@@ -198,7 +198,7 @@ function injectInlineStyles() {
     #${TRACKER_ROOT_ID} .clu-row {
       display: grid;
       grid-template-columns: auto 1fr auto;
-      gap: 10px;
+      gap: 8px;
       align-items: center;
       flex: 1;
       color: rgba(255, 255, 255, 0.85);
@@ -420,12 +420,12 @@ function formatCountdown(isoDate) {
   const minutes = totalMinutes % 60;
 
   if (days > 0) {
-    return `⏳ ${days}d ${hours}h`;
+    return `${days}d ${hours}h`;
   }
   if (hours > 0) {
-    return `⏳ ${hours}h ${minutes}m`;
+    return `${hours}h ${minutes}m`;
   }
-  return `⏳ ${minutes}m`;
+  return `${minutes}m`;
 }
 
 function setRowState(prefix, quotaObj) {
