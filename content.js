@@ -180,13 +180,15 @@ function injectInlineStyles() {
   style.id = TRACKER_STYLE_ID;
   style.textContent = `
     #${TRACKER_ROOT_ID} {
-      width: 100%;
-      margin-top: 8px;
+      flex: 1;
+      width: auto;
+      margin: 0;
       display: flex;
       flex-direction: row;
       align-items: center;
+      justify-content: center;
       gap: 16px;
-      padding: 0 4px;
+      padding: 0 12px;
       box-sizing: border-box;
       animation: cluFadeIn 220ms ease;
       position: relative;
@@ -303,6 +305,50 @@ function getTrackerRoot() {
   return document.getElementById(TRACKER_ROOT_ID);
 }
 
+function findControlsContainer(host) {
+  const plusBtns = Array.from(document.querySelectorAll('[aria-label*="Add files" i], [aria-label*="Add files," i]'));
+  const plusBtn = plusBtns[plusBtns.length - 1];
+                  
+  if (plusBtn) {
+    let flexContainer = plusBtn.parentElement;
+    for (let i = 0; i < 5; i++) {
+      if (flexContainer && typeof flexContainer.className === 'string' && flexContainer.className.includes('flex-1') && flexContainer.className.includes('flex')) {
+        return flexContainer;
+      }
+      if (flexContainer) flexContainer = flexContainer.parentElement;
+    }
+  }
+
+  const modelBtns = Array.from(document.querySelectorAll('[data-testid="model-selector-dropdown"]'));
+  const modelBtn = modelBtns[modelBtns.length - 1];
+  
+  if (modelBtn) {
+    let row = modelBtn.parentElement;
+    for (let i = 0; i < 6; i++) {
+      if (row && typeof row.className === 'string' && row.className.includes('gap-2') && row.className.includes('w-full') && row.className.includes('flex')) {
+         const flex1 = row.querySelector('.flex-1');
+         if (flex1) return flex1;
+         return row;
+      }
+      if (row) row = row.parentElement;
+    }
+  }
+
+  const buttons = Array.from(host.querySelectorAll('button'));
+  if (buttons.length >= 2) {
+    const firstBtn = buttons[0];
+    let ancestor = firstBtn.parentElement;
+    while (ancestor && ancestor !== host && ancestor !== document.body) {
+      if (ancestor.contains(buttons[buttons.length - 1])) {
+        return ancestor;
+      }
+      ancestor = ancestor.parentElement;
+    }
+  }
+  
+  return null;
+}
+
 function setInlineStatus(text) {
   const status = document.getElementById("clu-inline-status");
   if (status) {
@@ -315,7 +361,7 @@ function ensureTrackerMounted() {
 
   const host = chooseBestComposerHost();
   if (!host) {
-    log("host-missing");
+    log('host-missing');
     return null;
   }
 
@@ -324,9 +370,20 @@ function ensureTrackerMounted() {
     root = createTrackerRoot();
   }
 
-  if (!host.contains(root)) {
-    host.appendChild(root);
-    log("host-found", host);
+  const targetContainer = findControlsContainer(host);
+
+  if (targetContainer) {
+    if (root.parentElement !== targetContainer) {
+      targetContainer.appendChild(root);
+      log('controls-found', targetContainer);
+    }
+  } else {
+    if (root.parentElement !== host.parentElement) {
+      if (host.nextElementSibling !== root) {
+        host.insertAdjacentElement('afterend', root);
+        log('host-fallback', host);
+      }
+    }
   }
 
   return root;
