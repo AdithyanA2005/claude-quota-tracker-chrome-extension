@@ -1,4 +1,5 @@
 export function formatResetTime(isoTimestamp) {
+  if (!isoTimestamp) return '--';
   try {
     const date = new Date(isoTimestamp);
     const now = new Date();
