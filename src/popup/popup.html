@@ -5,100 +5,107 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Claude Usage Tracker</title>
   <link rel="stylesheet" href="popup.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+  
+  <div class="ambient-bg">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+  </div>
+
   <div class="container">
-    <div class="header">
-      <h1>Claude Usage Tracker</h1>
+    <header class="header">
+      <div class="header-left">
+        <h1>Claude Tracker</h1>
+        <div class="tier-badge-mini" id="tierBadge">Loading...</div>
+      </div>
       <button id="refreshBtn" class="refresh-btn" title="Refresh data">
-        <span class="refresh-icon">🔄</span>
+        <svg class="refresh-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21v-5h5"/></svg>
       </button>
-    </div>
+    </header>
 
-    <div id="loadingContainer" class="loading-container">
+    <div id="loadingContainer" class="state-container">
       <div class="spinner"></div>
-      <p>Loading usage data...</p>
     </div>
 
-    <div id="contentContainer" class="content-container" style="display: none;">
-      <!-- Subscription Tier -->
-      <div class="tier-section">
-        <div class="tier-badge" id="tierBadge">Loading...</div>
-      </div>
-
-      <!-- 5-Hour Session Limit -->
-      <div class="quota-section" id="fiveHourSection" style="display: none;">
-        <div class="quota-header">
-          <span class="quota-label">⏱️ 5-Hour Session Limit</span>
-          <span class="quota-percentage" id="fiveHourPercent">--%</span>
-        </div>
-        <div class="progress-bar">
-          <div class="progress-fill" id="fiveHourBar"></div>
-        </div>
-        <div class="quota-footer">
-          <span class="reset-label">Reset:</span>
-          <span class="reset-time" id="fiveHourReset">-</span>
-        </div>
-      </div>
-
-      <!-- 7-Day Limit -->
-      <div class="quota-section" id="sevenDaySection" style="display: none;">
-        <div class="quota-header">
-          <span class="quota-label">📅 7-Day Limit</span>
-          <span class="quota-percentage" id="sevenDayPercent">--%</span>
-        </div>
-        <div class="progress-bar">
-          <div class="progress-fill" id="sevenDayBar"></div>
-        </div>
-        <div class="quota-footer">
-          <span class="reset-label">Reset:</span>
-          <span class="reset-time" id="sevenDayReset">-</span>
-        </div>
-      </div>
-
-      <!-- Claude 3.5 Sonnet Weekly (if available) -->
-      <div class="quota-section" id="sonnetWeeklySection" style="display: none;">
-        <div class="quota-header">
-          <span class="quota-label">🎵 Sonnet Weekly Limit</span>
-          <span class="quota-percentage" id="sonnetPercent">--%</span>
-        </div>
-        <div class="progress-bar">
-          <div class="progress-fill" id="sonnetBar"></div>
-        </div>
-        <div class="quota-footer">
-          <span class="reset-label">Reset:</span>
-          <span class="reset-time" id="sonnetReset">-</span>
-        </div>
-      </div>
-
-      <!-- Claude 3 Opus Weekly (if available) -->
-      <div class="quota-section" id="opusWeeklySection" style="display: none;">
-        <div class="quota-header">
-          <span class="quota-label">🎼 Opus Weekly Limit</span>
-          <span class="quota-percentage" id="opusPercent">--%</span>
-        </div>
-        <div class="progress-bar">
-          <div class="progress-fill" id="opusBar"></div>
-        </div>
-        <div class="quota-footer">
-          <span class="reset-label">Reset:</span>
-          <span class="reset-time" id="opusReset">-</span>
-        </div>
-      </div>
-
-      <!-- Last Updated -->
-      <div class="footer">
-        <span id="lastUpdated">Last updated: -</span>
-      </div>
-    </div>
-
-    <!-- Error Container -->
-    <div id="errorContainer" class="error-container" style="display: none;">
-      <div class="error-icon">⚠️</div>
-      <h2>Unable to Load Usage Data</h2>
+    <div id="errorContainer" class="state-container" style="display: none;">
+      <svg class="error-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <h2>Connection Failed</h2>
       <p id="errorMessage">-</p>
-      <p class="error-hint">Make sure you're logged into <a href="https://claude.ai" target="_blank">claude.ai</a></p>
-      <button id="retryBtn" class="retry-btn">Try Again</button>
+      <button id="retryBtn" class="btn-primary">Try Again</button>
+    </div>
+
+    <div id="contentContainer" class="content-wrapper" style="display: none;">
+      <div class="metrics-grid">
+        
+        <!-- 5-Hour Session Limit -->
+        <div class="metric-card" id="fiveHourSection" style="display: none;">
+          <div class="card-header">
+            <span class="card-title">Session Limit</span>
+            <span class="card-value" id="fiveHourPercent">--%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="fiveHourBar"></div>
+          </div>
+          <div class="card-footer">
+            <span class="footer-label">Resets in</span>
+            <span class="footer-time" id="fiveHourReset">-</span>
+          </div>
+        </div>
+
+        <!-- 7-Day Limit -->
+        <div class="metric-card" id="sevenDaySection" style="display: none;">
+          <div class="card-header">
+            <span class="card-title">Action Limit</span>
+            <span class="card-value" id="sevenDayPercent">--%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="sevenDayBar"></div>
+          </div>
+          <div class="card-footer">
+            <span class="footer-label">Resets in</span>
+            <span class="footer-time" id="sevenDayReset">-</span>
+          </div>
+        </div>
+
+        <!-- Sonnet Limit -->
+        <div class="metric-card" id="sonnetWeeklySection" style="display: none;">
+          <div class="card-header">
+            <span class="card-title">Sonnet Weekly</span>
+            <span class="card-value" id="sonnetPercent">--%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="sonnetBar"></div>
+          </div>
+          <div class="card-footer">
+            <span class="footer-label">Resets in</span>
+            <span class="footer-time" id="sonnetReset">-</span>
+          </div>
+        </div>
+
+        <!-- Opus Limit -->
+        <div class="metric-card" id="opusWeeklySection" style="display: none;">
+          <div class="card-header">
+            <span class="card-title">Opus Weekly</span>
+            <span class="card-value" id="opusPercent">--%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="opusBar"></div>
+          </div>
+          <div class="card-footer">
+            <span class="footer-label">Resets in</span>
+            <span class="footer-time" id="opusReset">-</span>
+          </div>
+        </div>
+
+      </div>
+
+      <footer class="footer">
+        <span id="lastUpdated">Updating...</span>
+      </footer>
     </div>
   </div>
 
