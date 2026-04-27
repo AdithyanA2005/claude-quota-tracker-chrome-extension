@@ -13,22 +13,25 @@
   ],
   
   "host_permissions": [
-    "*://claude.ai/*"
+    "*://claude.ai/*",
+    "http://localhost:5173/*",
+    "http://127.0.0.1:5173/*"
   ],
   
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "src/background.js",
+    "type": "module"
   },
   
   "content_scripts": [
     {
       "matches": ["https://claude.ai/*"],
-      "js": ["content.js"]
+      "js": ["src/content.js"]
     }
   ],
   
   "action": {
-    "default_popup": "popup/popup.html",
+    "default_popup": "src/popup/popup.html",
     "default_icon": "icons/icon128.png",
     "default_title": "Claude Usage Tracker"
   },
