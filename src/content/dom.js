@@ -30,6 +30,24 @@ export function chooseBestComposerHost() {
 }
 
 export function findControlsContainer(host) {
+  // Stage 1: Look for the grow container (middle spacer section with flex-row layout)
+  // This is the ideal placement for progress bars - centered with plenty of space
+  const modelBtns = Array.from(document.querySelectorAll('[data-testid="model-selector-dropdown"]'));
+  const modelBtn = modelBtns[modelBtns.length - 1];
+  if (modelBtn) {
+    let row = modelBtn.parentElement;
+    for (let i = 0; i < 6; i++) {
+      if (row && typeof row.className === 'string' && row.className.includes('gap-2') && row.className.includes('w-full') && row.className.includes('flex')) {
+        // Look for the .grow container (middle empty section) within this row
+        const growContainer = row.querySelector('.grow');
+        if (growContainer) return growContainer;
+        break;
+      }
+      if (row) row = row.parentElement;
+    }
+  }
+
+  // Stage 2: Fallback to flex-1 container if grow not found
   const plusBtns = Array.from(document.querySelectorAll('[aria-label*="Add files" i], [aria-label*="Add files," i]'));
   const plusBtn = plusBtns[plusBtns.length - 1];
   if (plusBtn) {
@@ -40,20 +58,7 @@ export function findControlsContainer(host) {
     }
   }
 
-  const modelBtns = Array.from(document.querySelectorAll('[data-testid="model-selector-dropdown"]'));
-  const modelBtn = modelBtns[modelBtns.length - 1];
-  if (modelBtn) {
-    let row = modelBtn.parentElement;
-    for (let i = 0; i < 6; i++) {
-      if (row && typeof row.className === 'string' && row.className.includes('gap-2') && row.className.includes('w-full') && row.className.includes('flex')) {
-         const flex1 = row.querySelector('.flex-1');
-         if (flex1) return flex1;
-         return row;
-      }
-      if (row) row = row.parentElement;
-    }
-  }
-
+  // Stage 3: Fallback to common ancestor of buttons
   const buttons = Array.from(host.querySelectorAll('button'));
   if (buttons.length >= 2) {
     const firstBtn = buttons[0];
