@@ -43,7 +43,7 @@ src/utils/orgId.js
 
 ## Commands
 
-Use `pnpm` only.
+Use `pnpm` only. Version is pinned in `mise.toml` (currently 10.33.2).
 
 ```bash
 pnpm install
@@ -61,6 +61,7 @@ There is currently no test script. Use `pnpm build` as the baseline verification
 - `src/background/cache.js` caches usage data for 2 minutes.
 - `src/background/polling.js` refreshes data every 5 minutes only when Claude.ai is the active tab.
 - `src/content/tracker.js` refreshes the inline tracker every 60 seconds.
+- `src/background/api.js` detects subscription tier: Team (raven_type), Max 5x/20x (capabilities + rate_limit_tier), Pro (capabilities), Free (default).
 
 ## API Context
 

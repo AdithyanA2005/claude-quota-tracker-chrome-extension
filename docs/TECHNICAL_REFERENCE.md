@@ -2,6 +2,11 @@
 
 Concise technical context for humans and AI agents.
 
+## Tool Versions
+
+- pnpm version pinned in `mise.toml` (currently 10.33.2)
+- Build tools: Vite 5.x + @crxjs/vite-plugin 2.0.0-beta.33
+
 ## Claude.ai Endpoints
 
 Base URL:
@@ -76,6 +81,8 @@ Current lookup order:
 
 All values pass through `normalizeOrgId()` in `src/utils/orgId.js`.
 
+Content script retries org ID extraction up to 10 times with 2-second intervals if initial extraction fails.
+
 ## Subscription Detection
 
 `src/background/api.js` checks the organization object returned by `/bootstrap/{orgId}/app_start`:
@@ -91,6 +98,7 @@ All values pass through `normalizeOrgId()` in `src/utils/orgId.js`.
 - Usage cache TTL: 2 minutes in `src/background/cache.js`.
 - Background alarm interval: 5 minutes in `src/background/polling.js`.
 - Inline tracker interval: 60 seconds in `src/content/tracker.js`.
+- Mount throttle: 250ms in `src/content/tracker.js`.
 - Failed fresh requests return stale cached data when available.
 
 ## Known Fragile Areas

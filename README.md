@@ -9,6 +9,7 @@ Chrome/Chromium extension for showing Claude.ai quota usage in the browser popup
 - Shows 5-hour, 7-day, Sonnet weekly, and Opus weekly usage in the extension popup.
 - Injects compact 5-hour and 7-day usage bars into Claude.ai.
 - Caches usage data locally to avoid unnecessary API calls.
+- Detects subscription tier (Team, Max 5x/20x, Pro, Free).
 
 ## Project Structure
 
@@ -16,6 +17,7 @@ Chrome/Chromium extension for showing Claude.ai quota usage in the browser popup
 .
 ├── AGENTS.md                 # AI-agent operating guide
 ├── README.md                 # Human-facing project overview
+├── mise.toml                 # Tool version pinning (pnpm 10.33.2)
 ├── docs/
 │   └── TECHNICAL_REFERENCE.md
 ├── manifest.json             # Manifest V3 extension config
@@ -29,6 +31,13 @@ Chrome/Chromium extension for showing Claude.ai quota usage in the browser popup
 │   └── utils/                # Formatting, logging, org ID helpers
 └── icons/                    # Extension icons
 ```
+
+## Polling and Caching
+
+- Background polling: Every 5 minutes (only when Claude.ai is active tab)
+- Usage cache TTL: 2 minutes
+- Inline tracker refresh: Every 60 seconds
+- Failed requests fall back to stale cached data
 
 ## Development
 
