@@ -2,6 +2,8 @@
 
 Chrome/Chromium extension for showing Claude.ai quota usage in the browser popup and inline inside the Claude.ai composer.
 
+![Inline tracker preview](docs/screenshots/inline-tracker-preview.png)
+
 ## What It Does
 
 - Reads the active Claude organization ID from Claude.ai storage/cookies.
@@ -19,7 +21,9 @@ Chrome/Chromium extension for showing Claude.ai quota usage in the browser popup
 ├── README.md                 # Human-facing project overview
 ├── mise.toml                 # Tool version pinning (pnpm 10.33.2)
 ├── docs/
-│   └── TECHNICAL_REFERENCE.md
+│   ├── TECHNICAL_REFERENCE.md
+│   └── screenshots/              # Extension screenshots
+│       └── inline-tracker-preview.png
 ├── manifest.json             # Manifest V3 extension config
 ├── vite.config.js            # Vite + CRX plugin config
 ├── src/
